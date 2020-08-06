@@ -21,6 +21,7 @@ from efficientdet.dataset import CocoDataset, Resizer, Normalizer, Augmenter, co
 from efficientdet.loss import FocalLoss
 from utils.sync_batchnorm import patch_replication_callback
 from utils.utils import replace_w_sync_bn, CustomDataParallel, get_last_weights, init_weights, boolean_string
+from coco_eval_train import eval_valid
 
 
 class Params:
@@ -46,7 +47,7 @@ def get_args():
                                                                    ' very final stage then switch to \'sgd\'')
     parser.add_argument('--num_epochs', type=int, default=500)
     parser.add_argument('--val_interval', type=int, default=1, help='Number of epoches between valing phases')
-    parser.add_argument('--save_interval', type=int, default=500, help='Number of steps between saving')
+    parser.add_argument('--save_interval', type=int, default=1000, help='Number of steps between saving')
     parser.add_argument('--es_min_delta', type=float, default=0.0,
                         help='Early stopping\'s parameter: minimum change loss to qualify as an improvement')
     parser.add_argument('--es_patience', type=int, default=0,
@@ -82,7 +83,7 @@ class ModelWithLoss(nn.Module):
 
 
 def train(opt):
-    params = Params(f'projects/{opt.project}.yml')
+    params = Params(f'{opt.project}.yml')
 
     if params.num_gpus == 0:
         os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
@@ -253,7 +254,7 @@ def train(opt):
 
                     if step % opt.save_interval == 0 and step > 0:
                         save_checkpoint(model, f'efficientdet-d{opt.compound_coef}_{epoch}_{step}.pth')
-                        print('checkpoint...')
+                        #print('checkpoint...')
 
                 except Exception as e:
                     print('[Error]', traceback.format_exc())
@@ -296,11 +297,24 @@ def train(opt):
                 writer.add_scalars('Regression_loss', {'val': reg_loss}, step)
                 writer.add_scalars('Classfication_loss', {'val': cls_loss}, step)
 
+                #model.eval()
+                nms_threshold = 0.5
+                use_cuda = True if torch.cuda.is_available() else False
+                use_float16 = False
+                override_prev_results = True
+                project_name = opt.project
+                confidence = 0.8
+                eval_valid(opt.data_path,
+                          opt.compound_coef,
+                          model,
+                          nms_threshold,use_cuda,use_float16,override_prev_results,project_name,confidence)
+
+
                 if loss + opt.es_min_delta < best_loss:
                     best_loss = loss
                     best_epoch = epoch
 
-                    save_checkpoint(model, f'efficientdet-d{opt.compound_coef}_{epoch}_{step}.pth')
+                    save_checkpoint(model, f'efficientdet-d{opt.compound_coef}_{epoch}_{step}_best.pth')
 
                 model.train()
 
