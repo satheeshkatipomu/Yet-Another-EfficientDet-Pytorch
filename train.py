@@ -314,7 +314,7 @@ def train(opt):
                     best_loss = loss
                     best_epoch = epoch
 
-                    save_checkpoint(model, f'efficientdet-d{opt.compound_coef}_{epoch}_{step}_best.pth')
+                    save_checkpoint(model, 'best.pth')
 
                 model.train()
 

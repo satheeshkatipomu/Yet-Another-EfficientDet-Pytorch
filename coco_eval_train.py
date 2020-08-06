@@ -138,7 +138,7 @@ def eval_valid(data_path,compound_coef,model,nms_threshold,use_cuda,use_float16,
     listOfGlobals['use_float16'] = use_float16
     listOfGlobals['override_prev_results'] = override_prev_results
     listOfGlobals['project_name'] = project_name
-    listOfGlobals['params'] = yaml.safe_load(open(f'projects/{project_name}.yml'))
+    listOfGlobals['params'] = yaml.safe_load(open(f'{project_name}.yml'))
     listOfGlobals['obj_list'] = listOfGlobals['params']['obj_list']
     listOfGlobals['confidence'] = confidence
     params = listOfGlobals['params']

@@ -153,9 +153,8 @@ def predict(images: List[Union[str, os.PathLike]],
         if os.path.exists(os.path.dirname(output_path)):
             output_file = output_path
         else:
-            raise IOError(
-                f"{Fore.RED} no such directory {os.path.dirname(output_path)} {Style.RESET_ALL}"
-            )
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            output_file = output_path
     elif os.path.isdir(output_path):
         output_file = os.path.join(
             output_path, "yolov5_predictions_" + str(time.time()).split(".")[0] + ".json"
